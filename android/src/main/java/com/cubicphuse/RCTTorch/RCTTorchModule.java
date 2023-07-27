@@ -5,6 +5,7 @@
 package com.cubicphuse.RCTTorch;
 
 import android.hardware.Camera;
+import android.util.Log;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -30,23 +31,30 @@ public class RCTTorchModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void switchState(Boolean newState, Callback successCallback, Callback failureCallback) {
-        Camera.Parameters params;
+        try {
+            Camera.Parameters params;
 
-        if (newState && !isTorchOn) {
-            camera = Camera.open();
-            params = camera.getParameters();
-            params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-            camera.setParameters(params);
-            camera.startPreview();
-            isTorchOn = true;
-        } else if (isTorchOn) {
-            params = camera.getParameters();
-            params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-
-            camera.setParameters(params);
-            camera.stopPreview();
-            camera.release();
-            isTorchOn = false;
+            Log.d("RCTTorchModule", "switchState:0101:newState=[" + newState + "],isTorchOn=[" + isTorchOn + "]");
+            if (newState && !isTorchOn) {
+                Log.d("RCTTorchModule", "switchState:0201");
+                camera = Camera.open();
+                params = camera.getParameters();
+                params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                camera.setParameters(params);
+                camera.startPreview();
+                isTorchOn = true;
+            } else if (!newState && isTorchOn) {
+                Log.d("RCTTorchModule", "switchState:0301");
+                params = camera.getParameters();
+                params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                camera.setParameters(params);
+                camera.stopPreview();
+                camera.release();
+                isTorchOn = false;
+            }
+            Log.d("RCTTorchModule", "switchState:0102");
+        } catch (Exception ex) {
+            Log.e("RCTTorchModule", "exception", ex);
         }
     }
 }
