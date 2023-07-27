@@ -4,11 +4,7 @@
 
 package com.cubicphuse.RCTTorch;
 
-import android.content.Context;
 import android.hardware.Camera;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraManager;
-import android.os.Build;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -34,37 +30,23 @@ public class RCTTorchModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void switchState(Boolean newState, Callback successCallback, Callback failureCallback) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            CameraManager cameraManager =
-                    (CameraManager) this.myReactContext.getSystemService(Context.CAMERA_SERVICE);
+        Camera.Parameters params;
 
-            try {
-                String cameraId = cameraManager.getCameraIdList()[0];
-                cameraManager.setTorchMode(cameraId, newState);
-                successCallback.invoke(true);
-            } catch (Exception e) {
-                String errorMessage = e.getMessage();
-                failureCallback.invoke("Error: " + errorMessage);
-            }
-        } else {
-            Camera.Parameters params;
+        if (newState && !isTorchOn) {
+            camera = Camera.open();
+            params = camera.getParameters();
+            params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+            camera.setParameters(params);
+            camera.startPreview();
+            isTorchOn = true;
+        } else if (isTorchOn) {
+            params = camera.getParameters();
+            params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
 
-            if (newState && !isTorchOn) {
-                camera = Camera.open();
-                params = camera.getParameters();
-                params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-                camera.setParameters(params);
-                camera.startPreview();
-                isTorchOn = true;
-            } else if (isTorchOn) {
-                params = camera.getParameters();
-                params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-
-                camera.setParameters(params);
-                camera.stopPreview();
-                camera.release();
-                isTorchOn = false;
-            }
+            camera.setParameters(params);
+            camera.stopPreview();
+            camera.release();
+            isTorchOn = false;
         }
     }
 }
